@@ -12,7 +12,6 @@ permissions:
 
 jobs:
   build:
-    if: github.repository_owner == 'urllib3'
     name: "Build distribution 📦"
     runs-on: "ubuntu-latest"
     outputs:
@@ -53,8 +52,8 @@ jobs:
           if-no-files-found: error
           retention-days: 5
 
-  publish-to-pypi-and-github:
-    name: "Publish to PyPI"
+  publish-to-github:
+    name: "Publish to GitHub"
     if: ${{ github.ref_type == 'tag' }}
     needs: ["build"]
     permissions:
@@ -82,30 +81,3 @@ jobs:
           --notes "" \
           --verify-tag
         gh release upload "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY"
-
-    - name: "Publish dists to PyPI"
-      uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
-      with:
-        attestations: true
-
-  publish-to-test-pypi:
-    name: "Publish to Test PyPI"
-    needs: ["build"]
-    permissions:
-      id-token: write # Needed for trusted publishing to PyPI.
-    runs-on: "ubuntu-latest"
-    environment:
-      name: "testpypi"
-
-    steps:
-    - name: "Download dists"
-      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
-      with:
-        artifact-ids: ${{ needs.build.outputs.artifact-id }}
-        path: "dist/"
-
-    - name: "Publish dists to Test PyPI"
-      uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
-      with:
-        repository-url: https://test.pypi.org/legacy/
-        attestations: true
